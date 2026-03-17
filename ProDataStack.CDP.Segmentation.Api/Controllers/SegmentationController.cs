@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ProDataStack.CDP.Segmentation.Api.Controllers
 {
+    // TODO: Remove [AllowAnonymous] — TEST ONLY, allows demo without Clerk JWT
+    [AllowAnonymous]
     [ApiController]
     [Route("api/v1/[controller]")]
     public class SegmentationController : ControllerBase
