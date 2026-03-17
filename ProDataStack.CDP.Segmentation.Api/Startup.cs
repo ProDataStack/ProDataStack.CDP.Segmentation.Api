@@ -5,7 +5,7 @@ using ProDataStack.Chassis;
 
 namespace ProDataStack.CDP.Segmentation.Api
 {
-    public class Startup : StartupBase
+    public class Startup : ProDataStack.Chassis.StartupBase
     {
         public override void ConfigureComponentServices(IServiceCollection services)
         {
