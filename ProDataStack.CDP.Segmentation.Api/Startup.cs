@@ -1,8 +1,6 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
-using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using ProDataStack.CDP.Segmentation.Api.Context;
 using ProDataStack.Chassis;
 
 namespace ProDataStack.CDP.Segmentation.Api
@@ -11,16 +9,10 @@ namespace ProDataStack.CDP.Segmentation.Api
     {
         public override void ConfigureComponentServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DatabaseConnection");
-
-            services.AddDbContextFactory<SegmentationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
             services.AddChassisAuthentication(Configuration);
             services.AddAMQP(Configuration);
 
-            services.AddHealthChecks()
-                .AddSqlServer(connectionString ?? string.Empty, name: "database");
+            services.AddHealthChecks();
 
             services.AddApplicationInsightsTelemetry(options =>
             {
