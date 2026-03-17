@@ -1,12 +1,25 @@
-using Azure.Monitor.OpenTelemetry.AspNetCore;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
-using ProDataStack.Chassis;
-
 namespace ProDataStack.CDP.Segmentation.Api
 {
+    using Azure.Monitor.OpenTelemetry.AspNetCore;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using OpenTelemetry.Metrics;
+    using OpenTelemetry.Trace;
+    using ProDataStack.Chassis.Authentication;
+    using ProDataStack.Chassis.DependencyInjection;
+
     public class Startup : ProDataStack.Chassis.StartupBase
     {
+        public Startup(IConfiguration configuration)
+            : base(configuration)
+        {
+        }
+
+        public override void ConfigureComponent(IApplicationBuilder app)
+        {
+        }
+
         public override void ConfigureComponentServices(IServiceCollection services)
         {
             services.AddChassisAuthentication(Configuration);
@@ -14,12 +27,13 @@ namespace ProDataStack.CDP.Segmentation.Api
 
             services.AddHealthChecks();
 
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
             services.AddApplicationInsightsTelemetry(options =>
             {
-                options.ConnectionString = Configuration["AzureMonitor:ConnectionString"];
+                options.EnableAdaptiveSampling = false;
             });
 
-            var env = Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
             var otelBuilder = services.AddOpenTelemetry()
                 .WithMetrics(metrics =>
                 {
@@ -37,10 +51,6 @@ namespace ProDataStack.CDP.Segmentation.Api
             {
                 otelBuilder.UseAzureMonitor();
             }
-        }
-
-        public override void ConfigureComponent(IApplicationBuilder app)
-        {
         }
     }
 }
