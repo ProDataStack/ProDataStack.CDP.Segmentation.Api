@@ -176,8 +176,7 @@ jobs:
           sed -i "s|__AppName__|cdp-segmentation-api|g" Deployment/helm/values.yaml
           sed -i "s|__Environment__|testing|g" Deployment/helm/values.yaml
           sed -i "s|__ServiceName__|cdp-segmentation-api-service|g" Deployment/helm/values.yaml
-          sed -i "s|__HostNameTesting__|cdp-segmentation-api.testing.pdsnextgen.com|g" Deployment/helm/values.yaml
-          sed -i "s|__HostNameProduction__|cdp-segmentation-api.prodatastack.com|g" Deployment/helm/values.yaml
+          sed -i "s|__HostName__|cdp-segmentation-api.testing.pdsnextgen.com|g" Deployment/helm/values.yaml
           sed -i "s|__KeyVaultName__|cdp-seg-api-test|g" Deployment/helm/values.yaml
           sed -i "s|__TenantId__|${{ secrets.AZURE_TENANT_ID }}|g" Deployment/helm/values.yaml
           sed -i "s|__ServicePrincipalClientId__|${{ secrets.AZURE_DEPLOYMENT_CLIENT_ID}}|g" Deployment/helm/values.yaml
@@ -196,9 +195,10 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install cdp-segmentation-api-release \
+          helm upgrade --install cdp-segmentation-api-testing-release \
             ./Deployment/helm \
-            --namespace cdp \
+            --namespace cdp-testing \
+            --create-namespace \
             --wait \
             --timeout 10m
 
@@ -206,7 +206,7 @@ jobs:
         if: failure()
         id: get-pod
         run: |
-          POD_NAME=$(kubectl get pods -n cdp -l app=cdp-segmentation-api -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+          POD_NAME=$(kubectl get pods -n cdp-testing -l app=cdp-segmentation-api -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
           echo "pod_name=$POD_NAME" >> $GITHUB_OUTPUT
           echo "Pod name: $POD_NAME"
 
@@ -214,19 +214,19 @@ jobs:
         if: failure() && steps.get-pod.outputs.pod_name != ''
         run: |
           echo "=== Pod Logs ==="
-          kubectl logs ${{ steps.get-pod.outputs.pod_name }} -n cdp --tail=100 || echo "Failed to retrieve logs"
+          kubectl logs ${{ steps.get-pod.outputs.pod_name }} -n cdp-testing --tail=100 || echo "Failed to retrieve logs"
 
       - name: Describe pod on failure
         if: failure() && steps.get-pod.outputs.pod_name != ''
         run: |
           echo "=== Pod Description ==="
-          kubectl describe pod ${{ steps.get-pod.outputs.pod_name }} -n cdp || echo "Failed to describe pod"
+          kubectl describe pod ${{ steps.get-pod.outputs.pod_name }} -n cdp-testing || echo "Failed to describe pod"
 
       - name: Get all pods status on failure
         if: failure()
         run: |
           echo "=== All Pods Status ==="
-          kubectl get pods -n cdp -l app=cdp-segmentation-api || echo "Failed to get pods status"
+          kubectl get pods -n cdp-testing -l app=cdp-segmentation-api || echo "Failed to get pods status"
 
   deploy-production:
     name: Deploy to Production
@@ -368,8 +368,7 @@ jobs:
           sed -i "s|__AppName__|cdp-segmentation-api|g" Deployment/helm/values.yaml
           sed -i "s|__Environment__|production|g" Deployment/helm/values.yaml
           sed -i "s|__ServiceName__|cdp-segmentation-api-service|g" Deployment/helm/values.yaml
-          sed -i "s|__HostNameTesting__|cdp-segmentation-api.testing.pdsnextgen.com|g" Deployment/helm/values.yaml
-          sed -i "s|__HostNameProduction__|cdp-segmentation-api.prodatastack.com|g" Deployment/helm/values.yaml
+          sed -i "s|__HostName__|cdp-segmentation-api.prodatastack.com|g" Deployment/helm/values.yaml
           sed -i "s|__KeyVaultName__|cdp-seg-api-prod|g" Deployment/helm/values.yaml
           sed -i "s|__TenantId__|${{ secrets.AZURE_TENANT_ID }}|g" Deployment/helm/values.yaml
           sed -i "s|__ServicePrincipalClientId__|${{ secrets.AZURE_DEPLOYMENT_CLIENT_ID}}|g" Deployment/helm/values.yaml
@@ -388,9 +387,10 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install cdp-segmentation-api-release \
+          helm upgrade --install cdp-segmentation-api-production-release \
             ./Deployment/helm \
-            --namespace cdp \
+            --namespace cdp-production \
+            --create-namespace \
             --wait \
             --timeout 10m
 
@@ -398,7 +398,7 @@ jobs:
         if: failure()
         id: get-pod
         run: |
-          POD_NAME=$(kubectl get pods -n cdp -l app=cdp-segmentation-api -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+          POD_NAME=$(kubectl get pods -n cdp-production -l app=cdp-segmentation-api -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
           echo "pod_name=$POD_NAME" >> $GITHUB_OUTPUT
           echo "Pod name: $POD_NAME"
 
@@ -406,16 +406,16 @@ jobs:
         if: failure() && steps.get-pod.outputs.pod_name != ''
         run: |
           echo "=== Pod Logs ==="
-          kubectl logs ${{ steps.get-pod.outputs.pod_name }} -n cdp --tail=100 || echo "Failed to retrieve logs"
+          kubectl logs ${{ steps.get-pod.outputs.pod_name }} -n cdp-production --tail=100 || echo "Failed to retrieve logs"
 
       - name: Describe pod on failure
         if: failure() && steps.get-pod.outputs.pod_name != ''
         run: |
           echo "=== Pod Description ==="
-          kubectl describe pod ${{ steps.get-pod.outputs.pod_name }} -n cdp || echo "Failed to describe pod"
+          kubectl describe pod ${{ steps.get-pod.outputs.pod_name }} -n cdp-production || echo "Failed to describe pod"
 
       - name: Get all pods status on failure
         if: failure()
         run: |
           echo "=== All Pods Status ==="
-          kubectl get pods -n cdp -l app=cdp-segmentation-api || echo "Failed to get pods status"
+          kubectl get pods -n cdp-production -l app=cdp-segmentation-api || echo "Failed to get pods status"
