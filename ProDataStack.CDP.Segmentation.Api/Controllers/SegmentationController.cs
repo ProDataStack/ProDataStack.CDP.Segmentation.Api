@@ -13,8 +13,7 @@ namespace ProDataStack.CDP.Segmentation.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult HealthCheck()
         {
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "unknown";
-            return Ok(new { status = "ok", service = "CDP Segmentation API", environment = env, deploy = "namespace-separation" });
+            return Ok(new { status = "ok", service = "CDP Segmentation API" });
         }
 
         [HttpGet]
