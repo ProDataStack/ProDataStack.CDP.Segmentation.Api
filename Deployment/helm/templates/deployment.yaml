@@ -25,11 +25,11 @@ spec:
             value: {{ .Values.environment }}
           - name: ASPNETCORE_HTTP_PORTS
             value: "80"
-          - name: Connectionstrings__DatabaseConnection
+          - name: ConnectionStrings__TenantCatalog
             valueFrom:
               secretKeyRef:
                 name: segmentationapicredentials
-                key: DatabaseConnection
+                key: TenantCatalogConnection
           - name: Clerk__SecretKey
             valueFrom:
               secretKeyRef:
