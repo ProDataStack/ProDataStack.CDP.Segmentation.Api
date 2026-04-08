@@ -1,11 +1,13 @@
 namespace ProDataStack.CDP.Segmentation.Api
 {
     using Azure.Monitor.OpenTelemetry.AspNetCore;
-    using Microsoft.AspNetCore.Builder;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using OpenTelemetry.Metrics;
     using OpenTelemetry.Trace;
+    using ProDataStack.CDP.Segmentation.Api.Services;
+    using ProDataStack.CDP.TenantCatalog.Context;
     using ProDataStack.Chassis.Authentication;
     using ProDataStack.Chassis.DependencyInjection;
 
@@ -24,6 +26,16 @@ namespace ProDataStack.CDP.Segmentation.Api
         {
             services.AddChassisAuthentication(Configuration);
             services.AddAMQP(Configuration);
+
+            // Tenant catalog — for resolving org_id → tenant database connection
+            services.AddDbContextFactory<TenantCatalogDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("TenantCatalog")));
+
+            // Services
+            services.AddScoped<SegmentationService>();
+            services.AddScoped<SegmentFieldService>();
+            services.AddScoped<RuleEvaluationService>();
+            services.AddMemoryCache();
 
             services.AddHealthChecks();
 

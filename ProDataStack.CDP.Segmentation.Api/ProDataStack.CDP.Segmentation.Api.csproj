@@ -11,12 +11,14 @@
     <PackageReference Include="ProDataStack.Chassis" Version="1.0.10" />
     <PackageReference Include="ProDataStack.AMQP" Version="1.0.3" />
     <PackageReference Include="ProDataStack.Data" Version="1.0.2" />
+    <PackageReference Include="ProDataStack.CDP.TenantCatalog" Version="1.0.*" />
+    <PackageReference Include="ProDataStack.CDP.DataModel" Version="1.0.*" />
 
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.3.0" />
 
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
