@@ -48,7 +48,11 @@ public class SegmentationService
         }
 
         var options = new DbContextOptionsBuilder<CdpDbContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(connectionString, sql =>
+            {
+                sql.CommandTimeout(120);
+                sql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+            })
             .Options;
 
         return new CdpDbContext(options);
