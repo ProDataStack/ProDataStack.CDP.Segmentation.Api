@@ -29,7 +29,11 @@ namespace ProDataStack.CDP.Segmentation.Api
 
             // Tenant catalog — for resolving org_id → tenant database connection
             services.AddDbContextFactory<TenantCatalogDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("TenantCatalog")));
+                options.UseSqlServer(Configuration.GetConnectionString("TenantCatalog"), sql =>
+                {
+                    sql.CommandTimeout(120);
+                    sql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                }));
 
             // Services
             services.AddScoped<SegmentationService>();
