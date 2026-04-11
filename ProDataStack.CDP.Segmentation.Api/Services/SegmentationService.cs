@@ -202,12 +202,16 @@ public class SegmentationService
         var original = await db.Segments.AsNoTracking().FirstOrDefaultAsync(s => s.Id == segmentId);
         if (original == null) return null;
 
+        // Clone inherits the original's cached size since they have identical rules.
+        // This avoids showing 0 members until the next refresh.
         var clone = new Segment
         {
             Name = original.Name + " (Copy)",
             Description = original.Description,
             Category = original.Category,
             Rules = original.Rules,
+            Size = original.Size,
+            LastRefreshedAt = original.LastRefreshedAt,
             CreatedBy = userId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
