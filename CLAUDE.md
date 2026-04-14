@@ -64,3 +64,7 @@ Uses direct tenant resolution (NOT `Chassis.MultiTenant` middleware). Extract `o
 - `ProDataStack.CDP.TenantCatalog` — tenant catalog DbContext and entities (NuGet)
 
 When `DataModel` changes, this service must be redeployed to pick up the new NuGet package.
+
+## Iteration 2 scope
+
+See `CDP/iterations/2/ITERATION-2-TICKETS.md` § Epic 2/3 for the segmentation work (CDP-201 through CDP-205, CDP-303 through CDP-305). The I2 DataModel bump also adds connector runtime tables (`ConnectorConfig`, `ConnectorSyncJob`, `ConnectorSyncStaging`, `ConnectorSyncError`) used by the new `ProDataStack.CDP.Connectors.Api` — this service doesn't consume them, but they ship in the same NuGet version, so redeploy after the DataModel bump.
