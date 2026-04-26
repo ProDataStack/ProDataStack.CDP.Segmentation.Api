@@ -78,3 +78,43 @@ When `DataModel` changes, this service must be redeployed to pick up the new NuG
 ## Iteration 2 scope
 
 See `CDP/iterations/2/ITERATION-2-TICKETS.md` § Epic 2/3 for the segmentation work (CDP-201 through CDP-205, CDP-303 through CDP-305). The I2 DataModel bump also adds connector runtime tables (`ConnectorConfig`, `ConnectorSyncJob`, `ConnectorSyncStaging`, `ConnectorSyncError`) used by the new `ProDataStack.CDP.Connectors.Api` — this service doesn't consume them, but they ship in the same NuGet version, so redeploy after the DataModel bump.
+
+For a one-page summary of what shipped, see `CDP/iterations/2/SEGMENTATION-V1-SUMMARY.md`.
+
+## Extending segmentation
+
+Read `CDP/iterations/2/SEGMENTATION-RULES-SCHEMA.md` first — it covers the rules JSON wire format, operator types, and a how-to for adding new fields (direct column / computed / secondary / new entity). The rest of this section covers code-level gotchas inside this repo.
+
+### Field key resolution (where the magic happens)
+
+Rule field keys like `profile.firstName` resolve at runtime in `RuleEvaluationService.BuildRulePredicate`:
+
+1. Split on `.` → `entityKey` + `propertyName`
+2. Match `entityKey` against a switch (`profile`, `espIntegration`, `onlineStoreIntegration`, `ticketingIntegration`, `cometIntegration`)
+3. For `profile`: special-case computed fields (`ageGroup`, `totalPurchaseValue`, `engagementRate`) **before** falling back to reflection (`char.ToUpper(propertyName[0]) + propertyName[1..]` against `typeof(Profile)`)
+4. For integration entities: build `Profile.{Navigation}.Any(i => <condition>)`
+
+**To add a computed field on Profile:** add a `case` to the leading switch in `BuildProfilePredicate`, then write a helper that returns `Expression<Func<Profile, bool>>`. Existing helpers (`BuildAgeGroupPredicate`, `BuildTotalPurchaseValuePredicate`, `BuildEngagementRatePredicate`) are the templates.
+
+**To add a new entity** that joins through something other than the four direct integration navigations: add a new `case` to `BuildRulePredicate`. This is open work — `cometRegistration.*` fields are seeded but disabled because the join logic isn't there yet.
+
+### Tenant resolution is duplicated
+
+`GetTenantDbAsync` is copy-pasted in three services: `SegmentationService`, `SegmentFieldService`, `RuleEvaluationService`. All three resolve the same way (5-min cache via `IMemoryCache` keyed by `tenant-conn:{orgId}`, 120s `CommandTimeout`, `EnableRetryOnFailure`).
+
+If you change one (e.g. cache TTL), update all three. A future refactor should extract this to a shared helper or base class — flagged in `SEGMENTATION-V1-SUMMARY.md` Outstanding.
+
+### Seed data lives in two places
+
+The default segment field definitions exist in:
+
+1. `Services/SegmentFieldService.GetSeedFields` — used by `POST /api/v1/segment-fields/seed`
+2. `ProDataStack.CDP.DataModel/Migrations/20260409215614_SeedSegmentFields.cs` — runs on tenant provisioning
+
+**Both must be updated together** when adding a default field. The migration is idempotent (`IF NOT EXISTS (SELECT 1 FROM SegmentFields)`) so it won't double-seed, but it also won't add new fields to a tenant that's already been seeded — those need a manual insert or a wipe-and-reseed.
+
+Long-term we should pick one source of truth.
+
+### Rule grouping is gone but the schema still supports it
+
+The builder (UI) emits exactly one group per stakeholder feedback round 1. The rule engine still parses multi-group JSON (legacy data + forward-compat). If you reintroduce groups in the UI, the engine and JSON shape are already there — you just need to update the builder.
